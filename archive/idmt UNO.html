@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDMT – Card Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1e3c72;--blue:#2a5298;--lb:#4a7fd4;--gold:#f5c842;--red:#e53935;--green:#43a047;--cw:140px;--ch:195px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#0d1b3e;min-height:100vh;color:#fff;overflow-x:hidden;}
+#table{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px 10px 30px;gap:16px;background:radial-gradient(ellipse at center,#1a3060 0%,#0a1428 100%);}
+#table::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,255,255,0.015) 2px,rgba(255,255,255,0.015) 4px);pointer-events:none;}
+.hdr{text-align:center;padding:10px 0 4px;}
+.hdr h1{font-family:'Bebas Neue',sans-serif;font-size:2.4em;letter-spacing:3px;color:var(--gold);text-shadow:0 2px 12px rgba(245,200,66,0.4);}
+.hdr p{color:#a0b4d0;font-size:0.85em;}
+#sbar{display:flex;gap:20px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50px;padding:8px 24px;font-size:0.85em;color:#c8d8f0;flex-wrap:wrap;justify-content:center;}
+#sbar span{display:flex;align-items:center;gap:5px;}
+#sbar strong{color:#fff;}
+#play-area{display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap;min-height:240px;}
+#draw-pile{width:var(--cw);height:var(--ch);border-radius:14px;background:linear-gradient(135deg,#1e3c72,#0d1f40);border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 6px 24px rgba(0,0,0,.5);position:relative;flex-shrink:0;}
+#draw-pile:hover{transform:translateY(-6px);box-shadow:0 12px 32px rgba(245,200,66,.3);}
+#draw-pile .pi{font-size:2.4em;margin-bottom:6px;}
+#draw-pile .pl{font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--gold);font-size:.95em;}
+#draw-pile .pc{position:absolute;top:10px;right:10px;background:var(--gold);color:#000;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8em;}
+#disc{width:var(--cw);height:var(--ch);border-radius:14px;background:rgba(255,255,255,.05);border:2px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);font-size:.85em;flex-shrink:0;}
+.qc{width:var(--cw);height:var(--ch);border-radius:14px;background:linear-gradient(160deg,#1e3c72 0%,#2a5298 100%);border:2px solid rgba(255,255,255,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 10px;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .25s,box-shadow .25s;cursor:pointer;position:relative;overflow:hidden;}
+.qc::before{content:'IDMT';position:absolute;bottom:8px;right:10px;font-family:'Bebas Neue',sans-serif;font-size:.75em;letter-spacing:2px;color:rgba(255,255,255,.15);}
+.qc .ci{font-size:1.8em;margin-bottom:8px;}
+.qc .ct{font-size:.78em;text-align:center;color:#c8d8f0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;}
+.qc:hover{transform:translateY(-8px) rotate(1deg);box-shadow:0 14px 30px rgba(74,127,212,.4);z-index:10;position:relative;}
+.qc.sel{transform:translateY(-20px);box-shadow:0 16px 40px rgba(245,200,66,.5);border-color:var(--gold);}
+.ac{width:var(--cw);height:var(--ch);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 10px;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .25s,box-shadow .25s;cursor:pointer;position:relative;overflow:hidden;}
+.ac::after{content:attr(data-t);position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:'Bebas Neue',sans-serif;font-size:.72em;letter-spacing:2px;color:rgba(255,255,255,.6);white-space:nowrap;}
+.ac .ci{font-size:2.6em;margin-top:16px;}
+.ac .cn{font-family:'Bebas Neue',sans-serif;font-size:1.2em;letter-spacing:2px;margin-top:8px;text-align:center;}
+.ac .cd{font-size:.72em;text-align:center;opacity:.85;margin-top:4px;padding:0 6px;line-height:1.3;}
+.ac:hover{transform:translateY(-8px);z-index:10;position:relative;}
+.ac.sel{transform:translateY(-20px);box-shadow:0 16px 40px rgba(245,200,66,.5);border:2px solid var(--gold);}
+.ac.skip{background:linear-gradient(160deg,#c62828,#e53935);}
+.ac.swap{background:linear-gradient(160deg,#4a148c,#8e24aa);}
+.ac.hint{background:linear-gradient(160deg,#1b5e20,#43a047);}
+#hlabel{color:#a0b4d0;font-size:.78em;letter-spacing:1px;text-transform:uppercase;align-self:flex-start;padding-left:10px;}
+#hand{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:10px;width:100%;max-width:960px;align-items:center;overflow:visible;}
+#pbtn{background:var(--gold);color:#000;border:none;border-radius:50px;padding:16px 48px;font-family:'Bebas Neue',sans-serif;font-size:1.4em;letter-spacing:2px;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 4px 20px rgba(245,200,66,.3);min-width:200px;}
+#pbtn:hover:not(:disabled){transform:scale(1.05);box-shadow:0 8px 28px rgba(245,200,66,.5);}
+#pbtn:disabled{background:#555;color:#888;cursor:not-allowed;box-shadow:none;}
+#moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;padding:20px;}
+#moverlay.act{display:flex;}
+#modal{background:linear-gradient(160deg,#1a2f5a,#0d1b3e);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:32px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:su .3s ease;max-height:90vh;overflow-y:auto;}
+@keyframes su{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+#modal h2{font-family:'Bebas Neue',sans-serif;font-size:1.5em;letter-spacing:2px;color:var(--gold);margin-bottom:16px;}
+#modal .qt{font-size:1.05em;font-weight:600;color:#e8f0ff;margin-bottom:20px;line-height:1.4;}
+.opt{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.12);padding:12px 16px;border-radius:10px;margin-bottom:10px;cursor:pointer;transition:background .2s,border-color .2s;font-size:.92em;color:#c8d8f0;}
+.opt:hover{background:rgba(74,127,212,.2);border-color:var(--lb);}
+.opt.correct{background:rgba(67,160,71,.25);border-color:var(--green);color:#a5d6a7;}
+.opt.incorrect{background:rgba(229,57,53,.25);border-color:var(--red);color:#ef9a9a;}
+.opt.dis{pointer-events:none;}
+#mfb{margin-top:14px;padding:14px;border-radius:10px;font-size:.88em;line-height:1.5;display:none;}
+#mfb.correct{background:rgba(67,160,71,.15);border:1px solid rgba(67,160,71,.3);color:#a5d6a7;}
+#mfb.incorrect{background:rgba(229,57,53,.15);border:1px solid rgba(229,57,53,.3);color:#ef9a9a;}
+#mbtn{margin-top:20px;background:var(--blue);color:#fff;border:none;border-radius:50px;padding:11px 30px;font-family:'Bebas Neue',sans-serif;font-size:1.1em;letter-spacing:2px;cursor:pointer;display:none;}
+#mbtn:hover{background:var(--lb);}
+#amodal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;padding:20px;}
+#amodal.act{display:flex;}
+#amodal .inner{background:linear-gradient(160deg,#1a2f5a,#0d1b3e);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:32px;max-width:440px;width:100%;text-align:center;animation:su .3s ease;}
+#amodal .icon{font-size:3.5em;margin-bottom:12px;}
+#amodal h2{font-family:'Bebas Neue',sans-serif;font-size:1.8em;letter-spacing:3px;color:var(--gold);margin-bottom:8px;}
+#amodal p{color:#a0b4d0;font-size:.95em;line-height:1.5;margin-bottom:20px;}
+#amodal button{background:var(--gold);color:#000;border:none;border-radius:50px;padding:11px 30px;font-family:'Bebas Neue',sans-serif;font-size:1.1em;letter-spacing:2px;cursor:pointer;}
+#wscreen{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;padding:20px;}
+#wscreen.act{display:flex;}
+#wscreen .inner{background:linear-gradient(160deg,#1a2f5a,#0d1b3e);border:2px solid var(--gold);border-radius:20px;padding:40px;max-width:500px;width:100%;text-align:center;animation:su .4s ease;}
+#wscreen h1{font-family:'Bebas Neue',sans-serif;font-size:2.8em;letter-spacing:4px;color:var(--gold);margin-bottom:8px;}
+#wscreen .sb{font-size:3.5em;font-weight:700;color:#fff;margin:16px 0;}
+#wscreen p{color:#a0b4d0;font-size:.95em;line-height:1.6;margin-bottom:20px;text-align:left;}
+#wscreen button{background:var(--gold);color:#000;border:none;border-radius:50px;padding:13px 36px;font-family:'Bebas Neue',sans-serif;font-size:1.2em;letter-spacing:2px;cursor:pointer;transition:transform .2s;}
+#wscreen button:hover{transform:scale(1.05);}
+#iscreen{display:flex;position:fixed;inset:0;background:radial-gradient(ellipse at center,#1a3060 0%,#0a1428 100%);z-index:300;align-items:center;justify-content:center;padding:20px;overflow-y:auto;}
+#iscreen .inner{max-width:640px;width:100%;text-align:center;padding:20px 0;}
+#iscreen h1{font-family:'Bebas Neue',sans-serif;font-size:3em;letter-spacing:4px;color:var(--gold);text-shadow:0 0 30px rgba(245,200,66,.4);margin-bottom:6px;}
+#iscreen h2{font-family:'Bebas Neue',sans-serif;font-size:1.4em;letter-spacing:3px;color:#a0b4d0;margin-bottom:24px;}
+.rules{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px 24px;text-align:left;margin-bottom:24px;}
+.rules h3{font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--gold);margin-bottom:12px;font-size:1em;}
+.rules li{color:#a0b4d0;font-size:1em;margin-bottom:8px;line-height:1.4;list-style:none;}
+.rules li::before{content:'▸ ';color:var(--lb);}
+.scards{display:flex;gap:10px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;}
+.sc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;text-align:center;font-size:0.95em;color:#a0b4d0;}
+.sc .e{font-size:1.6em;display:block;margin-bottom:4px;}
+#sbtn{background:var(--gold);color:#000;border:none;border-radius:50px;padding:14px 42px;font-family:'Bebas Neue',sans-serif;font-size:1.3em;letter-spacing:3px;cursor:pointer;box-shadow:0 6px 28px rgba(245,200,66,.35);transition:transform .2s,box-shadow .2s;}
+#sbtn:hover{transform:scale(1.05);box-shadow:0 10px 36px rgba(245,200,66,.5);}
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(30,60,114,.95);border:1px solid rgba(255,255,255,.2);color:#fff;padding:10px 24px;border-radius:50px;font-size:.88em;z-index:500;opacity:0;transition:opacity .3s;white-space:nowrap;}
+#toast.show{opacity:1;}
+#hintbox{display:none;background:rgba(67,160,71,.15);border:1px solid rgba(67,160,71,.3);border-radius:10px;padding:12px 18px;color:#a5d6a7;font-size:.85em;max-width:600px;text-align:center;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div id="iscreen">
+  <div class="inner">
+    <h1>IDMT</h1>
+    <h2>Card Challenge</h2>
+    <p style="color:#a0b4d0;font-size:1em;margin-bottom:20px;line-height:1.6;">You've now successfully completed the IDMT training.<br>Test your knowledge with this card challenge!</p>
+    <div class="rules">
+      <h3>How to Play</h3>
+      <ul>
+        <li>You are dealt <strong>5 question cards</strong> plus a <strong>Skip</strong>, <strong>Hint</strong> and <strong>Swap</strong> — 8 cards total</li>
+        <li>Click a card to select it, then press <strong>Play Card</strong></li>
+        <li>Answer the question correctly to <strong>discard</strong> the card</li>
+        <li>Answer wrong and <strong>2 new question cards</strong> are added to your hand</li>
+        <li>Use <strong>Action Cards</strong> for special powers</li>
+        <li><strong>Empty your hand</strong> to win!</li>
+      </ul>
+    </div>
+    <div class="scards">
+      <div class="sc"><span class="e">⏭️</span>SKIP<br>Discard one question</div>
+      <div class="sc"><span class="e">💡</span>HINT<br>See a clue first</div>
+      <div class="sc"><span class="e">🔄</span>SWAP<br>Replace a question</div>
+      <div class="sc"><span class="e">🔀</span>RESHUFFLE<br>Fresh question cards</div>
+    </div>
+    <button id="sbtn" onclick="startGame()">Deal Cards</button>
+  </div>
+</div>
+
+<div id="table">
+  <div class="hdr"><h1>IDMT Card Challenge</h1><p>Idox Training</p></div>
+  <div id="sbar">
+    <span>🃏 Hand: <strong id="hc">0</strong></span>
+    <span>🔀 Deck: <strong id="dc">0</strong></span>
+    <span>✅ Correct: <strong id="sc">0</strong></span>
+    <span>❌ Wrong: <strong id="wc">0</strong></span>
+  </div>
+  <div id="play-area">
+    <div>
+      <div style="text-align:center;color:#a0b4d0;font-size:.75em;margin-bottom:6px;letter-spacing:1px">RESHUFFLE</div>
+      <div id="draw-pile" onclick="reshuffleHand()">
+        <div class="pi">🔀</div><div class="pl">Reshuffle</div><div class="pc" id="pc">0</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <button id="pbtn" disabled onclick="playSelected()">&#9654; Play Card</button>
+    </div>
+    <div>
+      <div style="text-align:center;color:#a0b4d0;font-size:.75em;margin-bottom:6px;letter-spacing:1px">DISCARD</div>
+      <div id="disc">Empty</div>
+    </div>
+  </div>
+  <div id="hintbox"></div>
+  <div id="hlabel">YOUR HAND</div>
+  <div id="hand"></div>
+</div>
+
+<div id="moverlay">
+  <div id="modal">
+    <h2 id="mtitle">Question</h2>
+    <div class="qt" id="mq"></div>
+    <div id="mopts"></div>
+    <div id="mfb"></div>
+    <button id="mbtn" onclick="closeModal()">Continue</button>
+  </div>
+</div>
+
+<div id="amodal">
+  <div class="inner">
+    <div class="icon" id="ai"></div>
+    <h2 id="at"></h2>
+    <p id="ad"></p>
+    <button onclick="closeAModal()">OK</button>
+  </div>
+</div>
+
+<div id="wscreen">
+  <div class="inner">
+    <h1 id="wt"></h1>
+    <div class="sb" id="ws"></div>
+    <p id="wm"></p>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const Q=[
+  {q:"What is the primary purpose of IDMT?",opts:["To automatically remove or cleanse data using defined rules","To insert new case records","To schedule background services","To send automated notifications"],c:0,exp:"IDMT is designed to remove or cleanse existing data in a controlled and auditable way. When a rule runs it removes selected data and can leave the field blank, apply 'Data Removed', or use a defined replacement value."},
+  {q:"A Test run returns 2,450 records. What should be done before running the rule live?",opts:["Run it immediately","Delete the rule","Disable audit","Review whether the volume and criteria are correct"],c:3,exp:"A large result set should always prompt review. Before running live, confirm the selection criteria are correct and the volume of records is expected."},
+  {q:"What must a rule contain before it can run?",opts:["An audit export","Selection criteria and at least one action","A DMS link","A scheduled service"],c:1,exp:"A rule requires selection criteria to identify which records are targeted and at least one action to define what change will occur."},
+  {q:"An administrator creates a rule with very broad selection criteria and runs it live without testing. What is the most likely outcome?",opts:["The rule will automatically fail","The audit will be disabled","More records than intended may be affected","The system blocks the update"],c:2,exp:"Broad criteria increase matched records. Running live without testing may remove data from more records than intended."},
+  {q:"When removing data using IDMT, what replacement options are available?",opts:["Insert a new case reference only","Automatically archive the field","Replace with a system generated audit ID","Leave blank, use default Data Removed, or define your own replacement text"],c:3,exp:"When data is removed the field can be left blank, populated with Data Removed, or replaced with a defined value."},
+  {q:"A Test run returns zero records, but several matches were expected. What should be reviewed first?",opts:["The selection criteria","The audit table","The server status","The HTML formatting"],c:0,exp:"If a Test returns zero results, the most likely cause is that the selection criteria do not match any current records."},
+  {q:"Why is the Audit feature important in IDMT?",opts:["It increases rule performance","It reduces database size","It records who made changes and what was changed","It blocks unauthorised users"],c:2,exp:"The Audit feature provides traceability — recording which records were updated, when, and which rule applied the update."},
+  {q:"An administrator uses KEYVAL to remove contact records for a specific case. What will be removed?",opts:["Only the email field within each contact","The entire contact records linked to that case","The case itself","The audit history"],c:1,exp:"When KEYVAL targets related records in a child table such as Contacts, the rule removes entire matching rows — a record level deletion."},
+  {q:"Why should rules be clearly named and documented?",opts:["To improve processing speed","To allow automatic scheduling","To reduce audit entries","To support governance and future review"],c:3,exp:"Clear naming and documentation ensure other administrators understand the purpose and scope of a rule, supporting governance."},
+  {q:"A rule appears to remain in Running status longer than expected. What should be considered before escalating?",opts:["The dataset being processed may be large","The system has crashed","The audit has failed","The rule has deleted itself"],c:0,exp:"Rules processing a large number of records may take longer. Confirm the volume before assuming a system fault."},
+  {q:"When is IDMT most appropriate to use?",opts:["For formatting HTML content","For one off personal changes","When removing or cleansing data across multiple records","For resetting user passwords"],c:2,exp:"IDMT is most appropriate when removing or cleansing data consistently across multiple records in a structured, repeatable way."},
+  {q:"An administrator removes data but chooses to leave the replacement field blank. What will be stored in that field?",opts:["Data Removed","Null or blank","The previous value","An audit reference number"],c:1,exp:"If no replacement value is selected, the field will be left blank. The Audit trail still records that the data was removed."},
+  {q:"What happens when a rule is run live after testing?",opts:["The system schedules it automatically","The audit is cleared","The rule disables itself","The selected records are permanently updated according to the defined action"],c:3,exp:"When a rule is run live, the defined action is applied to all matching records permanently and recorded in the Audit trail."},
+  {q:"Why is understanding table relationships important when designing an IDMT rule?",opts:["It improves system performance","It reduces screen loading time","It prevents user login issues","It ensures the correct records and related data are targeted"],c:3,exp:"IDMT can target parent and child records. Understanding table relationships ensures rules affect only intended records."}
+];
+
+let deck=[],hand=[],disc=[];
+let score=0,wrongs=0,selIdx=null,pendIdx=null,hintActive=false,skipMode=false,swapMode=false,questions_total=0;
+
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildDeck(){
+  let qc=shuf(Q.map((q,i)=>({kind:'q',idx:i})));
+  let skip={kind:'a',type:'skip',icon:'⏭️',name:'SKIP',desc:'Tap a question card to discard it'};
+  let hint={kind:'a',type:'hint',icon:'💡',name:'HINT',desc:'Reveals a clue for next question'};
+  let swap={kind:'a',type:'swap',icon:'🔄',name:'SWAP',desc:'Replace a question with a new one'};
+  // Opening hand: 5 question cards + all 3 action cards = 8 cards
+  let opening=[qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),skip,hint,swap];
+  deck=[...shuf(qc),...opening];
+}
+
+function startGame(){
+  document.getElementById('iscreen').style.display='none';
+  buildDeck();hand=[];disc=[];score=0;wrongs=0;questions_total=0;selIdx=null;hintActive=false;skipMode=false;swapMode=false;
+  // Deal the last 8 cards from deck (the pre-built opening hand including action cards)
+  hand=deck.splice(deck.length-8,8);
+  ra();
+}
+
+function deal(){
+  // Only deal question cards from deck during reshuffle/normal play
+  const idx=deck.findIndex(c=>c.kind==='q');
+  if(idx===-1) return false;
+  hand.push(deck.splice(idx,1)[0]);
+  return true;
+}
+
+function reshuffleHand(){
+  const questionCards=hand.filter(c=>c.kind==='q');
+  if(questionCards.length===0){toast('No question cards to reshuffle!');return;}
+  deck=[...questionCards,...deck];
+  shuf(deck);
+  hand=hand.filter(c=>c.kind==='a');
+  for(let i=0;i<questionCards.length;i++) deal();
+  selIdx=null;
+  toast('🔀 Hand reshuffled — fresh questions dealt!');
+  ra();
+}
+
+function ra(){renderHand();updateStat();}
+
+function renderHand(){
+  const el=document.getElementById('hand');
+  el.innerHTML='';
+  hand.forEach((card,i)=>{
+    const d=document.createElement('div');
+    if(card.kind==='q'){
+      const q=Q[card.idx];
+      d.className='qc'+(selIdx===i?' sel':'');
+      if(skipMode||swapMode){
+        const icon=skipMode?'👆':'🔄';
+        d.style.cssText='border-color:var(--gold);box-shadow:0 0 18px rgba(245,200,66,.6);cursor:pointer;';
+        d.innerHTML='<div class="ci">'+icon+'</div><div class="ct">'+q.q+'</div>';
+      } else {
+        d.innerHTML='<div class="ci">❓</div><div class="ct">'+q.q+'</div>';
+      }
+    } else {
+      d.className='ac '+card.type+(selIdx===i?' sel':'');
+      d.setAttribute('data-t','ACTION CARD');
+      d.innerHTML='<div class="ci">'+card.icon+'</div><div class="cn">'+card.name+'</div><div class="cd">'+card.desc+'</div>';
+      if(skipMode||swapMode) d.style.opacity='0.4';
+      // Grey out skip if only 1 question card left
+      const qCount=hand.filter(c=>c.kind==='q').length;
+      if(card.type==='skip'&&qCount<=1) d.style.opacity='0.3';
+    }
+    d.onclick=()=>selCard(i);
+    el.appendChild(d);
+  });
+  const dp=document.getElementById('disc');
+  const qDiscarded=disc.filter(c=>c.kind==='q').length;
+  if(qDiscarded>0){
+    dp.style.cssText='border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75em;text-align:center;padding:12px;color:#a0b4d0;';
+    dp.style.background='linear-gradient(160deg,#1e3c72,#2a5298)';
+    dp.style.border='2px solid rgba(255,255,255,.2)';
+    dp.innerHTML='<div style="font-size:1.8em;margin-bottom:6px">✅</div>'+qDiscarded+' discarded';
+  } else {
+    dp.style.cssText='';dp.innerHTML='Empty';
+  }
+  // Always keep play button in sync with selection state
+  document.getElementById('pbtn').disabled=(selIdx===null||skipMode||swapMode);
+}
+
+function selCard(i){
+  if(skipMode){
+    if(hand[i].kind!=='q'){toast('👆 Pick a question card to skip!');return;}
+    disc.push(hand.splice(i,1)[0]);
+    skipMode=false;
+    showAModal('⏭️','SKIPPED!','Question card discarded — no answer needed!');
+    ra();
+    return;
+  }
+  if(swapMode){
+    if(hand[i].kind!=='q'){toast('🔄 Pick a question card to swap!');return;}
+    // Remove selected question card, put it at bottom of deck, deal a new question card
+    const old=hand.splice(i,1)[0];
+    deck.unshift(old); // put back at bottom
+    // find a question card in deck to give them
+    const newQIdx=deck.findIndex(c=>c.kind==='q');
+    if(newQIdx!==-1){
+      const newCard=deck.splice(newQIdx,1)[0];
+      hand.push(newCard);
+    }
+    swapMode=false;
+    showAModal('🔄','SWAPPED!','Question replaced with a fresh one from the deck!');
+    ra();
+    return;
+  }
+  selIdx=(selIdx===i)?null:i;
+  renderHand();
+}
+
+function updateStat(){
+  document.getElementById('hc').textContent=hand.length;
+  document.getElementById('dc').textContent=deck.length;
+  document.getElementById('sc').textContent=score;
+  document.getElementById('wc').textContent=wrongs;
+  document.getElementById('pc').textContent=deck.length;
+}
+
+function playSelected(){
+  if(selIdx===null)return;
+  const card=hand[selIdx];
+  // Block skip if only 1 question card left — must answer it
+  if(card.kind==='a'&&card.type==='skip'){
+    const qCount=hand.filter(c=>c.kind==='q').length;
+    if(qCount<=1){
+      toast('⚠️ You must answer your last question!');
+      return;
+    }
+  }
+  pendIdx=selIdx;
+  if(card.kind==='a')playAction(card);
+  else openQ(card.idx);
+}
+
+function discardCard(idx){disc.push(hand.splice(idx,1)[0]);}
+
+function playAction(card){
+  // Remove the action card from hand first
+  hand.splice(pendIdx,1);
+  disc.push(card);
+  selIdx=null;
+  document.getElementById('pbtn').disabled=true;
+
+  if(card.type==='skip'){
+    // Enter skip mode — player taps a question card to discard it
+    const hasQ=hand.some(c=>c.kind==='q');
+    if(hasQ){
+      skipMode=true;
+      toast('👆 Tap a question card to skip it!');
+      ra();
+      return;
+    } else {
+      showAModal('⏭️','SKIP!','No question cards left in hand to skip.');
+    }
+  } else if(card.type==='hint'){
+    hintActive=true;
+    showAModal('💡','HINT READY','Select a question card next — a clue will appear inside the question panel before the options.');
+  } else if(card.type==='swap'){
+    const hasQ=hand.some(c=>c.kind==='q');
+    if(hasQ&&deck.some(c=>c.kind==='q')){
+      swapMode=true;
+      toast('🔄 Tap a question card to swap it!');
+      ra();
+      return;
+    } else {
+      showAModal('🔄','SWAP!','No question cards available to swap.');
+    }
+  }
+  ra();
+}
+
+function openQ(qi){
+  const q=Q[qi];
+  document.getElementById('mtitle').textContent='Question';
+  document.getElementById('mq').textContent=q.q;
+  const oe=document.getElementById('mopts');
+  oe.innerHTML='';
+  if(hintActive){
+    const hintDiv=document.createElement('div');
+    hintDiv.style.cssText='background:rgba(67,160,71,.18);border:1px solid rgba(67,160,71,.4);border-radius:10px;padding:10px 14px;color:#a5d6a7;font-size:.85em;margin-bottom:14px;line-height:1.5;';
+    hintDiv.textContent='💡 Hint: '+q.exp.split('.')[0]+'.';
+    oe.appendChild(hintDiv);
+    hintActive=false;
+  }
+  q.opts.forEach((o,i)=>{
+    const d=document.createElement('div');
+    d.className='opt';d.textContent=o;
+    d.onclick=()=>answer(i,qi);
+    oe.appendChild(d);
+  });
+  document.getElementById('mfb').style.display='none';
+  document.getElementById('mfb').className='';
+  document.getElementById('mbtn').style.display='none';
+  document.getElementById('moverlay').classList.add('act');
+}
+
+function answer(chosen,qi){
+  const q=Q[qi];
+  const opts=document.querySelectorAll('.opt');
+  opts.forEach(o=>o.classList.add('dis'));
+  const fb=document.getElementById('mfb');
+  questions_total++;
+  if(chosen===q.c){
+    opts[chosen].classList.add('correct');
+    fb.className='correct';fb.textContent='✅ Correct – '+q.exp;
+    score++;discardCard(pendIdx);selIdx=null;
+  } else {
+    opts[chosen].classList.add('incorrect');opts[q.c].classList.add('correct');
+    fb.className='incorrect';fb.textContent='❌ Incorrect – '+q.exp;
+    wrongs++;
+    let d=0;for(let i=0;i<2;i++){if(deal())d++;}
+    if(d>0)toast('Penalty: drew '+d+' card'+(d>1?'s':'')+'!');
+    selIdx=null;
+  }
+  fb.style.display='block';
+  document.getElementById('mbtn').style.display='inline-block';
+  document.getElementById('pbtn').disabled=true;
+  updateStat();
+}
+
+function closeModal(){
+  document.getElementById('moverlay').classList.remove('act');
+  document.getElementById('hintbox').style.display='none';
+  ra();checkEnd();
+}
+
+function showAModal(icon,title,desc){
+  document.getElementById('ai').textContent=icon;
+  document.getElementById('at').textContent=title;
+  document.getElementById('ad').textContent=desc;
+  document.getElementById('amodal').classList.add('act');
+}
+
+function closeAModal(){document.getElementById('amodal').classList.remove('act');}
+
+function checkEnd(){
+  // Silently discard any action cards that are no longer useful
+  // Skip/Swap useless if no question cards in hand, Hint useless if no question cards in hand
+  const qInHand=hand.filter(c=>c.kind==='q').length;
+  if(qInHand===0){
+    // Move all remaining action cards to discard silently
+    const actions=hand.filter(c=>c.kind==='a');
+    actions.forEach(c=>disc.push(c));
+    hand=hand.filter(c=>c.kind==='q');
+  }
+const winMsg='<p style="margin-bottom:12px">You answered '+score+' question'+(score!==1?'s':'')+' correctly with '+wrongs+' wrong.</p>'+
+        '<p style="margin-bottom:12px">This reinforces your understanding of IDMT data removal, testing, audit and governance.</p>'+
+        '<p style="margin-bottom:12px">If any areas were unclear, revisit the relevant sections of the training materials.</p>'+
+        '<p style="margin-bottom:12px;font-size:1.1em;font-weight:700;color:#f5c842;">Thank you for attending Idox training</p>'+
+        '<p>If you\'d like to explore further training courses, please speak to your Idox account manager.</p>';
+  if(hand.length===0){
+    setTimeout(()=>{
+      document.getElementById('wt').textContent='🏆 YOU WIN!';
+      document.getElementById('ws').textContent=score+' / '+questions_total+' correct';
+      document.getElementById('wm').innerHTML=winMsg;
+      document.getElementById('wscreen').classList.add('act');
+    },300);
+  } else if(deck.length===0&&hand.filter(c=>c.kind==='q').length===0){
+    setTimeout(()=>{
+      document.getElementById('wt').textContent='🏆 YOU WIN!';
+      document.getElementById('ws').textContent=score+' / '+questions_total+' correct';
+      document.getElementById('wm').innerHTML=winMsg;
+      document.getElementById('wscreen').classList.add('act');
+    },300);
+  }
+}
+
+function restartGame(){document.getElementById('wscreen').classList.remove('act');startGame();}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+</script>
+</body>
+</html>
