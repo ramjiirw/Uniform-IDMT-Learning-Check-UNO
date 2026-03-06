@@ -127,7 +127,7 @@ body{font-family:'DM Sans',sans-serif;background:#0d1b3e;min-height:100vh;color:
   <div id="sbar">
     <span>🃏 Hand: <strong id="hc">0</strong></span>
     <span>🔀 Deck: <strong id="dc">0</strong></span>
-    <span>✅ Correct: <strong id="sc">0</strong></span>
+    <span>⭐ Points: <strong id="sc">0</strong></span>
     <span>❌ Wrong: <strong id="wc">0</strong></span>
   </div>
   <div id="play-area">
@@ -441,7 +441,8 @@ function checkEnd(){
     actions.forEach(c=>disc.push(c));
     hand=hand.filter(c=>c.kind==='q');
   }
-const winMsg='<p style="margin-bottom:12px">You answered '+score+' question'+(score!==1?'s':'')+' correctly with '+wrongs+' wrong.</p>'+
+const maxPoints=questions_total+2;// max possible if shield used on a correct answer
+const winMsg='<p style="margin-bottom:12px">You answered '+questions_total+' question'+(questions_total!==1?'s':'')+' correctly with '+wrongs+' wrong — earning <strong>'+score+' point'+(score!==1?'s':'')+'</strong>.</p>'+
         '<p style="margin-bottom:12px">This reinforces your understanding of IDMT data removal, testing, audit and governance.</p>'+
         '<p style="margin-bottom:12px">If any areas were unclear, revisit the relevant sections of the training materials.</p>'+
         '<p style="margin-bottom:12px;font-size:1.1em;font-weight:700;color:#f5c842;">Thank you for attending Idox training</p>'+
@@ -449,14 +450,14 @@ const winMsg='<p style="margin-bottom:12px">You answered '+score+' question'+(sc
   if(hand.length===0){
     setTimeout(()=>{
       document.getElementById('wt').textContent='🏆 YOU WIN!';
-      document.getElementById('ws').textContent=score+' / '+questions_total+' correct';
+      document.getElementById('ws').textContent=score+' point'+(score!==1?'s':'');
       document.getElementById('wm').innerHTML=winMsg;
       document.getElementById('wscreen').classList.add('act');
     },300);
   } else if(deck.length===0&&hand.filter(c=>c.kind==='q').length===0){
     setTimeout(()=>{
       document.getElementById('wt').textContent='🏆 YOU WIN!';
-      document.getElementById('ws').textContent=score+' / '+questions_total+' correct';
+      document.getElementById('ws').textContent=score+' point'+(score!==1?'s':'');
       document.getElementById('wm').innerHTML=winMsg;
       document.getElementById('wscreen').classList.add('act');
     },300);
