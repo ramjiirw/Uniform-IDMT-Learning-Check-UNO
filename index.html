@@ -209,14 +209,18 @@ function buildDeck(){
   let hint={kind:'a',type:'hint',icon:'💡',name:'HINT',desc:'Reveals a clue for next question'};
   let swap={kind:'a',type:'swap',icon:'🔄',name:'SWAP',desc:'Replace a question with a new one'};
   // Opening hand: 9 question cards + all 3 action cards = 12 cards
-  let qCards=[qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop()];
-  let actions=[lifeline,hint,swap];
-  // Insert each action card at a random position among the question cards
-  actions.forEach(a=>{
-    const pos=Math.floor(Math.random()*(qCards.length+1));
-    qCards.splice(pos,0,a);
-  });
-  let opening=qCards;
+  let qCards=shuf([qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop()]);
+  let actions=shuf([lifeline,hint,swap]);
+  // Place one action card after every 3 question cards (zones), guaranteeing spread
+  let opening=[];
+  let zone=0;
+  for(let i=0;i<9;i++){
+    opening.push(qCards[i]);
+    if(i===2||i===5||i===8){
+      opening.push(actions[zone]);
+      zone++;
+    }
+  }
   deck=[...shuf(qc),...opening];
 }
 
