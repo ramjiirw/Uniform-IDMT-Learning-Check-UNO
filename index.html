@@ -37,7 +37,7 @@ body{font-family:'DM Sans',sans-serif;background:#0d1b3e;min-height:100vh;color:
 .ac .cd{font-size:.72em;text-align:center;opacity:.85;margin-top:4px;padding:0 6px;line-height:1.3;}
 .ac:hover{transform:translateY(-8px);z-index:10;position:relative;}
 .ac.sel{transform:translateY(-20px);box-shadow:0 16px 40px rgba(245,200,66,.5);border:2px solid var(--gold);}
-.ac.skip{background:linear-gradient(160deg,#c62828,#e53935);}
+.ac.lifeline{background:linear-gradient(160deg,#b45309,#f59e0b);}
 .ac.swap{background:linear-gradient(160deg,#4a148c,#8e24aa);}
 .ac.hint{background:linear-gradient(160deg,#1b5e20,#43a047);}
 #hlabel{color:#a0b4d0;font-size:.78em;letter-spacing:1px;text-transform:uppercase;align-self:flex-start;padding-left:10px;}
@@ -104,7 +104,7 @@ body{font-family:'DM Sans',sans-serif;background:#0d1b3e;min-height:100vh;color:
     <div class="rules">
       <h3>How to Play</h3>
       <ul>
-        <li>You are dealt <strong>5 question cards</strong> plus a <strong>Skip</strong>, <strong>Hint</strong> and <strong>Swap</strong> — 8 cards total</li>
+        <li>You are dealt <strong>9 question cards</strong> plus a <strong>Shield</strong>, <strong>Hint</strong> and <strong>Swap</strong> — 12 cards total</li>
         <li>Click a card to select it, then press <strong>Play Card</strong></li>
         <li>Answer the question correctly to <strong>discard</strong> the card</li>
         <li>Answer wrong and <strong>2 new question cards</strong> are added to your hand</li>
@@ -113,7 +113,7 @@ body{font-family:'DM Sans',sans-serif;background:#0d1b3e;min-height:100vh;color:
       </ul>
     </div>
     <div class="scards">
-      <div class="sc"><span class="e">⏭️</span>SKIP<br>Discard one question</div>
+      <div class="sc"><span class="e">🛡️</span>SHIELD<br>Double points or no penalty</div>
       <div class="sc"><span class="e">💡</span>HINT<br>See a clue first</div>
       <div class="sc"><span class="e">🔄</span>SWAP<br>Replace a question</div>
       <div class="sc"><span class="e">🔀</span>RESHUFFLE<br>Fresh question cards</div>
@@ -199,25 +199,25 @@ const Q=[
 ];
 
 let deck=[],hand=[],disc=[];
-let score=0,wrongs=0,selIdx=null,pendIdx=null,hintActive=false,skipMode=false,swapMode=false,questions_total=0;
+let score=0,wrongs=0,selIdx=null,pendIdx=null,hintActive=false,lifelineActive=false,swapMode=false,questions_total=0;
 
 function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 function buildDeck(){
   let qc=shuf(Q.map((q,i)=>({kind:'q',idx:i})));
-  let skip={kind:'a',type:'skip',icon:'⏭️',name:'SKIP',desc:'Tap a question card to discard it'};
+  let lifeline={kind:'a',type:'lifeline',icon:'🛡️',name:'SHIELD',desc:'Correct = double points · Wrong = no penalty'};
   let hint={kind:'a',type:'hint',icon:'💡',name:'HINT',desc:'Reveals a clue for next question'};
   let swap={kind:'a',type:'swap',icon:'🔄',name:'SWAP',desc:'Replace a question with a new one'};
-  // Opening hand: 5 question cards + all 3 action cards = 8 cards
-  let opening=[qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),skip,hint,swap];
+  // Opening hand: 9 question cards + all 3 action cards = 12 cards
+  let opening=[qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),lifeline,hint,swap];
   deck=[...shuf(qc),...opening];
 }
 
 function startGame(){
   document.getElementById('iscreen').style.display='none';
-  buildDeck();hand=[];disc=[];score=0;wrongs=0;questions_total=0;selIdx=null;hintActive=false;skipMode=false;swapMode=false;
-  // Deal the last 8 cards from deck (the pre-built opening hand including action cards)
-  hand=deck.splice(deck.length-8,8);
+  buildDeck();hand=[];disc=[];score=0;wrongs=0;questions_total=0;selIdx=null;hintActive=false;lifelineActive=false;swapMode=false;
+  // Deal the last 12 cards from deck (the pre-built opening hand including action cards)
+  hand=deck.splice(deck.length-12,12);
   ra();
 }
 
@@ -246,15 +246,21 @@ function ra(){renderHand();updateStat();}
 function renderHand(){
   const el=document.getElementById('hand');
   el.innerHTML='';
-  hand.forEach((card,i)=>{
+  // Render action cards first, then question cards
+  const sorted=[...hand.keys()].sort((a,b)=>{
+    const ak=hand[a].kind==='a'?0:1;
+    const bk=hand[b].kind==='a'?0:1;
+    return ak-bk;
+  });
+  sorted.forEach((i)=>{
+    const card=hand[i];
     const d=document.createElement('div');
     if(card.kind==='q'){
       const q=Q[card.idx];
       d.className='qc'+(selIdx===i?' sel':'');
-      if(skipMode||swapMode){
-        const icon=skipMode?'👆':'🔄';
+      if(swapMode){
         d.style.cssText='border-color:var(--gold);box-shadow:0 0 18px rgba(245,200,66,.6);cursor:pointer;';
-        d.innerHTML='<div class="ci">'+icon+'</div><div class="ct">'+q.q+'</div>';
+        d.innerHTML='<div class="ci">🔄</div><div class="ct">'+q.q+'</div>';
       } else {
         d.innerHTML='<div class="ci">❓</div><div class="ct">'+q.q+'</div>';
       }
@@ -262,10 +268,7 @@ function renderHand(){
       d.className='ac '+card.type+(selIdx===i?' sel':'');
       d.setAttribute('data-t','ACTION CARD');
       d.innerHTML='<div class="ci">'+card.icon+'</div><div class="cn">'+card.name+'</div><div class="cd">'+card.desc+'</div>';
-      if(skipMode||swapMode) d.style.opacity='0.4';
-      // Grey out skip if only 1 question card left
-      const qCount=hand.filter(c=>c.kind==='q').length;
-      if(card.type==='skip'&&qCount<=1) d.style.opacity='0.3';
+      if(swapMode) d.style.opacity='0.4';
     }
     d.onclick=()=>selCard(i);
     el.appendChild(d);
@@ -281,18 +284,10 @@ function renderHand(){
     dp.style.cssText='';dp.innerHTML='Empty';
   }
   // Always keep play button in sync with selection state
-  document.getElementById('pbtn').disabled=(selIdx===null||skipMode||swapMode);
+  document.getElementById('pbtn').disabled=(selIdx===null||swapMode);
 }
 
 function selCard(i){
-  if(skipMode){
-    if(hand[i].kind!=='q'){toast('👆 Pick a question card to skip!');return;}
-    disc.push(hand.splice(i,1)[0]);
-    skipMode=false;
-    showAModal('⏭️','SKIPPED!','Question card discarded — no answer needed!');
-    ra();
-    return;
-  }
   if(swapMode){
     if(hand[i].kind!=='q'){toast('🔄 Pick a question card to swap!');return;}
     // Remove selected question card, put it at bottom of deck, deal a new question card
@@ -324,14 +319,6 @@ function updateStat(){
 function playSelected(){
   if(selIdx===null)return;
   const card=hand[selIdx];
-  // Block skip if only 1 question card left — must answer it
-  if(card.kind==='a'&&card.type==='skip'){
-    const qCount=hand.filter(c=>c.kind==='q').length;
-    if(qCount<=1){
-      toast('⚠️ You must answer your last question!');
-      return;
-    }
-  }
   pendIdx=selIdx;
   if(card.kind==='a')playAction(card);
   else openQ(card.idx);
@@ -346,17 +333,9 @@ function playAction(card){
   selIdx=null;
   document.getElementById('pbtn').disabled=true;
 
-  if(card.type==='skip'){
-    // Enter skip mode — player taps a question card to discard it
-    const hasQ=hand.some(c=>c.kind==='q');
-    if(hasQ){
-      skipMode=true;
-      toast('👆 Tap a question card to skip it!');
-      ra();
-      return;
-    } else {
-      showAModal('⏭️','SKIP!','No question cards left in hand to skip.');
-    }
+  if(card.type==='lifeline'){
+    lifelineActive=true;
+    showAModal('🛡️','SHIELD ACTIVE!','Answer correctly on your next question to score double points. Answer wrong and the penalty draw is blocked!');
   } else if(card.type==='hint'){
     hintActive=true;
     showAModal('💡','HINT READY','Select a question card next — a clue will appear inside the question panel before the options.');
@@ -407,14 +386,25 @@ function answer(chosen,qi){
   questions_total++;
   if(chosen===q.c){
     opts[chosen].classList.add('correct');
-    fb.className='correct';fb.textContent='✅ Correct – '+q.exp;
-    score++;discardCard(pendIdx);selIdx=null;
+    if(lifelineActive){
+      fb.className='correct';fb.textContent='✅ Correct – '+q.exp+' (🛡️ Shield bonus: +2 points!)';
+      score+=2;lifelineActive=false;
+    } else {
+      fb.className='correct';fb.textContent='✅ Correct – '+q.exp;
+      score++;
+    }
+    discardCard(pendIdx);selIdx=null;
   } else {
     opts[chosen].classList.add('incorrect');opts[q.c].classList.add('correct');
-    fb.className='incorrect';fb.textContent='❌ Incorrect – '+q.exp;
     wrongs++;
-    let d=0;for(let i=0;i<2;i++){if(deal())d++;}
-    if(d>0)toast('Penalty: drew '+d+' card'+(d>1?'s':'')+'!');
+    if(lifelineActive){
+      fb.className='incorrect';fb.textContent='❌ Incorrect – '+q.exp+' (🛡️ Shield blocked your penalty draw!)';
+      lifelineActive=false;
+    } else {
+      fb.className='incorrect';fb.textContent='❌ Incorrect – '+q.exp;
+      let d=0;for(let i=0;i<2;i++){if(deal())d++;}
+      if(d>0)toast('Penalty: drew '+d+' card'+(d>1?'s':'')+'!');
+    }
     selIdx=null;
   }
   fb.style.display='block';
@@ -440,7 +430,6 @@ function closeAModal(){document.getElementById('amodal').classList.remove('act')
 
 function checkEnd(){
   // Silently discard any action cards that are no longer useful
-  // Skip/Swap useless if no question cards in hand, Hint useless if no question cards in hand
   const qInHand=hand.filter(c=>c.kind==='q').length;
   if(qInHand===0){
     // Move all remaining action cards to discard silently
