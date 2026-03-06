@@ -209,7 +209,7 @@ function buildDeck(){
   let hint={kind:'a',type:'hint',icon:'💡',name:'HINT',desc:'Reveals a clue for next question'};
   let swap={kind:'a',type:'swap',icon:'🔄',name:'SWAP',desc:'Replace a question with a new one'};
   // Opening hand: 9 question cards + all 3 action cards = 12 cards
-  let opening=[qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),lifeline,hint,swap];
+  let opening=shuf([qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),qc.pop(),lifeline,hint,swap]);
   deck=[...shuf(qc),...opening];
 }
 
@@ -246,14 +246,7 @@ function ra(){renderHand();updateStat();}
 function renderHand(){
   const el=document.getElementById('hand');
   el.innerHTML='';
-  // Render action cards first, then question cards
-  const sorted=[...hand.keys()].sort((a,b)=>{
-    const ak=hand[a].kind==='a'?0:1;
-    const bk=hand[b].kind==='a'?0:1;
-    return ak-bk;
-  });
-  sorted.forEach((i)=>{
-    const card=hand[i];
+  hand.forEach((card,i)=>{
     const d=document.createElement('div');
     if(card.kind==='q'){
       const q=Q[card.idx];
